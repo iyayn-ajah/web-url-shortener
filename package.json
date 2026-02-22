@@ -1,5 +1,5 @@
 {
-  "name": "upload-file-website",
+  "name": "url-shortener",
   "version": "1.0.0",
   "description": "A simple website to upload files to a GitHub repository",
   "main": "index.js",
