@@ -187,26 +187,25 @@ function validateInput() {
     }
 }
 
-function processCustomShortName(value) {
+function convertSpacesToUnderscore(value) {
     if (!value) return value;
-    const processed = value.replace(/\s+/g, '_');
+    return value.replace(/\s+/g, '_');
+}
+
+function validateCustomInput(value) {
+    if (!value) return true;
     const pattern = /^[a-zA-Z0-9\-_]+$/;
-    if (!pattern.test(processed)) {
-        return processed.replace(/[^a-zA-Z0-9\-_]/g, '');
-    }
-    return processed;
+    return pattern.test(value);
 }
 
 customInput.addEventListener('input', function(e) {
     const originalValue = this.value;
-    const processedValue = processCustomShortName(originalValue);
+    const hasSpaces = /\s/.test(originalValue);
     
-    if (originalValue !== processedValue) {
-        this.value = processedValue;
-        
+    if (hasSpaces) {
         const notification = document.createElement('div');
         notification.className = 'text-xs mt-1 text-blue-600 dark:text-blue-400 fade-in';
-        notification.textContent = '✓ Spasi telah diganti dengan underscore (_)';
+        notification.textContent = '✓ Spaces will be replaced with underscores (_) when submitting';
         
         const existingNotification = this.parentNode.querySelector('.custom-notification');
         if (existingNotification) {
@@ -229,27 +228,6 @@ customInput.addEventListener('keydown', function(e) {
         e.preventDefault();
     }
 });
-
-customInput.addEventListener('paste', function(e) {
-    e.preventDefault();
-    const pastedText = (e.clipboardData || window.clipboardData).getData('text');
-    const processedText = processCustomShortName(pastedText);
-    
-    const start = this.selectionStart;
-    const end = this.selectionEnd;
-    const currentValue = this.value;
-    const newValue = currentValue.substring(0, start) + processedText + currentValue.substring(end);
-    
-    this.value = processCustomShortName(newValue);
-    
-    this.selectionStart = this.selectionEnd = start + processedText.length;
-});
-
-function validateCustomInput(value) {
-    if (!value) return true;
-    const pattern = /^[a-zA-Z0-9\-_]+$/;
-    return pattern.test(value);
-}
 
 function showLoading() {
     loadingOverlay.classList.add('active');
@@ -276,7 +254,7 @@ closeErrorBtn.addEventListener('click', function() {
 
 shortenForm.addEventListener('submit', function(e) {
     const url = urlInput.value;
-    const customValue = customInput.value;
+    let customValue = customInput.value;
     
     if (timeoutId) {
         clearTimeout(timeoutId);
@@ -307,20 +285,22 @@ shortenForm.addEventListener('submit', function(e) {
     }
     
     if (customValue) {
-        const processedCustom = processCustomShortName(customValue);
+        const originalCustom = customValue;
+        const processedCustom = convertSpacesToUnderscore(customValue);
         
         if (!validateCustomInput(processedCustom)) {
             e.preventDefault();
-            showError('Custom short name hanya boleh berisi huruf, angka, dash (-), atau underscore (_)');
+            showError('Custom short name can only contain letters, numbers, dash (-), or underscore (_)');
             return;
         }
         
         customInput.value = processedCustom;
+        customValue = processedCustom;
         
-        if (customValue !== processedCustom) {
+        if (originalCustom !== processedCustom) {
             const notification = document.createElement('div');
             notification.className = 'text-xs mt-1 text-green-600 dark:text-green-400';
-            notification.textContent = '✓ Spasi telah diganti dengan underscore (_)';
+            notification.textContent = '✓ Spaces have been replaced with underscores (_)';
             customInput.parentNode.appendChild(notification);
             
             setTimeout(() => {
