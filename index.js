@@ -2,6 +2,12 @@ const express = require('express');
 const axios = require('axios');
 const crypto = require('crypto');
 require('dotenv').config(); // kalau pakai .env
+const rateLimit = require('express-rate-limit')
+
+const limit = rateLimit({
+  windowMs: process.env.RATE_LIMIT * 60 * 1000,
+  max: process.env.BATAS_LIMIT
+})
 
 const app = express();
 const port = 3000;
@@ -68,7 +74,7 @@ app.get('/script.js', (req, res) => {
   res.sendFile(__dirname + '/script.js');
 });
 
-app.post('/shorten', async (req, res) => {
+app.post('/shorten', limit, async (req, res) => {
   const { url, custom } = req.body;
   if (!url || !/^https?:\/\/.+$/i.test(url)) {
     return res.send("<p>URL tidak valid!</p><p><a href='/'>Kembali</a></p>");
